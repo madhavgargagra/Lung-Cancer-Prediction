@@ -1,0 +1,4171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Predict lung cancer threat level using a trained machine learning model. Easy to use assessment based on symptoms and habits.">
+    <title>Mady PathLabs - Lung Cancer Risk Assessment</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* Theme color tokens */
+            --bg-color: #080c14;
+            --card-bg: rgba(17, 24, 39, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #ff2e93;
+            --primary-glow: rgba(255, 46, 147, 0.4);
+            --secondary: #cd4a6e;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            
+            /* Status Colors */
+            --risk-low: #10b981;
+            --risk-low-glow: rgba(16, 185, 129, 0.3);
+            --risk-medium: #f59e0b;
+            --risk-medium-glow: rgba(245, 158, 11, 0.3);
+            --risk-high: #ef4444;
+            --risk-high-glow: rgba(239, 68, 68, 0.3);
+            
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Light Theme Variable Overrides */
+        body.light-theme {
+            --bg-color: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #db2777;
+            --primary-glow: rgba(219, 39, 119, 0.15);
+            --secondary: #be185d;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(219, 39, 119, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 40%);
+        }
+
+        body.light-theme #app-header {
+            background: rgba(241, 245, 249, 0.8);
+        }
+
+        body.light-theme .logo {
+            background: linear-gradient(135deg, #0f172a, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.light-theme #assessment-card {
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-theme .step-title {
+            color: var(--text-main);
+        }
+
+        body.light-theme .text-input {
+            background: rgba(15, 23, 42, 0.03);
+            border-color: rgba(15, 23, 42, 0.1);
+            color: var(--text-main);
+        }
+
+        body.light-theme .text-input:focus {
+            background: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .gender-card {
+            background: rgba(15, 23, 42, 0.03);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .gender-card:hover {
+            border-color: rgba(219, 39, 119, 0.4);
+            background: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .gender-card.selected {
+            background: var(--primary);
+            color: #ffffff !important;
+        }
+
+        body.light-theme .gender-card.selected i {
+            color: #ffffff !important;
+        }
+
+        body.light-theme .slider-val-badge {
+            background: rgba(15, 23, 42, 0.04);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .range-slider {
+            background: rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .btn-prev {
+            background: rgba(15, 23, 42, 0.05);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .btn-prev:hover {
+            background: rgba(15, 23, 42, 0.08);
+            border-color: rgba(15, 23, 42, 0.15);
+        }
+
+        body.light-theme .result-header h2 {
+            color: var(--text-main);
+        }
+
+        body.light-theme .gauge-card,
+        body.light-theme .prob-section,
+        body.light-theme .rec-section,
+        body.light-theme .force-plot-card,
+        body.light-theme .risk-explanations-card,
+        body.light-theme .simulator-card,
+        body.light-theme .subscores-card,
+        body.light-theme .action-plan-section {
+            background: rgba(15, 23, 42, 0.02);
+            border-color: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .gauge-track {
+            stroke: rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-theme .gauge-value,
+        body.light-theme .prob-title,
+        body.light-theme .rec-title,
+        body.light-theme .force-plot-title,
+        body.light-theme .expl-title,
+        body.light-theme .sim-header h3,
+        body.light-theme .subscores-title,
+        body.light-theme .subscore-val,
+        body.light-theme .action-plan-title {
+            color: var(--text-main);
+        }
+
+        body.light-theme .prob-bar-container,
+        body.light-theme .force-bar-track,
+        body.light-theme .subscore-bar-container {
+            background: rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-theme .force-bar-midpoint {
+            background: rgba(15, 23, 42, 0.25);
+        }
+
+        body.light-theme .force-plot-legend {
+            border-top-color: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .expl-item {
+            background: rgba(15, 23, 42, 0.01);
+            border-color: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .expl-item-title {
+            color: var(--text-main);
+        }
+
+        body.light-theme .sim-header {
+            border-bottom-color: rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-theme .sim-slider {
+            background: rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .sim-val {
+            background: rgba(15, 23, 42, 0.04);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .goal-checkbox-wrapper {
+            background: rgba(15, 23, 42, 0.01);
+            border-color: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .goal-checkbox-wrapper:hover {
+            background: rgba(15, 23, 42, 0.04);
+            border-color: rgba(15, 23, 42, 0.15);
+        }
+
+        body.light-theme .goal-checkbox {
+            border-color: rgba(15, 23, 42, 0.3);
+        }
+
+        body.light-theme .clinician-notes-card {
+            background: rgba(15, 23, 42, 0.02);
+            border-color: rgba(15, 23, 42, 0.06);
+        }
+
+        body.light-theme .clinician-notes-card textarea {
+            background: rgba(15, 23, 42, 0.03);
+            border-color: rgba(15, 23, 42, 0.1);
+            color: var(--text-main);
+        }
+
+        body.light-theme .disclaimer {
+            border-top-color: rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-theme .step-dot {
+            background: #cbd5e1;
+            border-color: rgba(15, 23, 42, 0.15);
+            color: var(--text-muted);
+        }
+
+        body.light-theme .step-dot.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        body.light-theme .step-dot.completed {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        body.light-theme .step-dot span.label {
+            color: var(--text-muted);
+        }
+
+        body.light-theme .step-dot.active span.label {
+            color: var(--text-main);
+        }
+
+        body.light-theme .step-dot.completed span.label {
+            color: var(--text-main);
+        }
+
+        body.light-theme .step-indicator::before {
+            background: rgba(15, 23, 42, 0.08);
+        }
+
+        /* Theme Toggle Button Styling */
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            transition: var(--transition-smooth);
+            font-size: 1.1rem;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+        }
+
+        body.light-theme .theme-toggle-btn {
+            background: rgba(15, 23, 42, 0.05);
+        }
+
+        body.light-theme .theme-toggle-btn:hover {
+            background: rgba(15, 23, 42, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 46, 147, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Unique IDs and Heading Hierarchy */
+        #app-header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            background: rgba(8, 12, 20, 0.7);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            color: var(--primary);
+            -webkit-text-fill-color: initial;
+            filter: drop-shadow(0 0 8px var(--primary));
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        #app-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .intro-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .intro-section h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .intro-section p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Glassmorphic Card Container */
+        #assessment-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            width: 100%;
+            padding: 3rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        #assessment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+        }
+
+        #app-main.widescreen {
+            max-width: 1350px;
+            transition: var(--transition-smooth);
+        }
+
+        #assessment-card.widescreen {
+            padding: 2.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        /* Progress Steps */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3.5rem;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 2px;
+            background: var(--primary);
+            width: 0%;
+            transform: translateY(-50%);
+            z-index: 2;
+            transition: var(--transition-smooth);
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #111827;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            position: relative;
+            z-index: 3;
+            transition: var(--transition-smooth);
+        }
+
+        .step-dot.active {
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--primary-glow);
+            background: var(--primary);
+        }
+
+        .step-dot.completed {
+            border-color: var(--primary);
+            color: #ffffff;
+            background: var(--primary);
+        }
+
+        .step-dot span.label {
+            position: absolute;
+            top: 48px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            transition: var(--transition-smooth);
+        }
+
+        .step-dot.active span.label {
+            color: #ffffff;
+        }
+
+        /* Form Steps styling */
+        .form-step {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-title i {
+            color: var(--primary);
+        }
+
+        /* Inputs & Grid Layout */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            #assessment-card {
+                padding: 1.5rem;
+            }
+
+            /* On mobile, align all tooltips to the right edge so they stay within the screen boundary */
+            .tooltip-trigger::after {
+                left: auto !important;
+                right: 0 !important;
+                transform: translateX(0) scale(0.9) !important;
+            }
+
+            .tooltip-trigger:hover::after {
+                transform: translateX(0) scale(1) !important;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feature-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Custom Text/Number Inputs */
+        .text-input {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition-smooth);
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(255, 46, 147, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Radio Buttons for Gender */
+        .gender-options {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .gender-card {
+            flex: 1;
+            position: relative;
+            padding: 0.9rem 1.2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .gender-card i {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            transition: var(--transition-smooth);
+        }
+
+        .gender-card input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .gender-card:hover {
+            border-color: rgba(255, 46, 147, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .gender-card.selected {
+            border-color: var(--primary);
+            background: rgba(255, 46, 147, 0.1);
+            color: #ffffff;
+        }
+
+        .gender-card.selected i {
+            color: var(--primary);
+        }
+
+        /* Beautiful Slider Design */
+        .slider-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .range-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: var(--transition-smooth);
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .slider-val-badge {
+            min-width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0 2px;
+        }
+
+        /* Buttons and Navigation */
+        .form-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.9rem 2rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-prev {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+        .btn-prev:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-next, .btn-submit {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .btn-next:hover, .btn-submit:hover {
+            background: #e0247e;
+            box-shadow: 0 4px 20px rgba(255, 46, 147, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:disabled {
+            background: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.5;
+        }
+
+        /* Loading Animation Layer */
+        .loading-overlay {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 3rem 0;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 46, 147, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Premium Result Card CSS */
+        .results-container {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .result-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .result-layout {
+                grid-template-columns: 1fr 1fr;
+            }
+            .result-layout > *:last-child {
+                grid-column: span 2;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .result-layout {
+                grid-template-columns: 1fr 1.1fr 1.2fr;
+                gap: 1.75rem;
+            }
+        }
+
+        /* Circular Gauge styles */
+        .gauge-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .gauge-svg-wrapper {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin-bottom: 1.5rem;
+        }
+
+        .gauge-svg-wrapper svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .gauge-track {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 12;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 502; /* 2 * PI * r (r=80) */
+            stroke-dashoffset: 502;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gauge-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .gauge-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .threat-tag {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 0.5rem 1.8rem;
+            border-radius: 50px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Threat Levels classes */
+        .threat-low {
+            color: var(--risk-low);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--risk-low);
+            box-shadow: 0 0 15px var(--risk-low-glow);
+        }
+
+        .threat-medium {
+            color: var(--risk-medium);
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--risk-medium);
+            box-shadow: 0 0 15px var(--risk-medium-glow);
+        }
+
+        .threat-high {
+            color: var(--risk-high);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--risk-high);
+            box-shadow: 0 0 15px var(--risk-high-glow);
+        }
+
+        .threat-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Probability Bars */
+        .prob-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .prob-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .prob-row {
+            margin-bottom: 1.2rem;
+        }
+
+        .prob-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+
+        .prob-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Recommendations Section */
+        .rec-section {
+            margin-top: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .rec-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rec-title i {
+            color: var(--primary);
+        }
+
+        .rec-list {
+            list-style: none;
+        }
+
+        .rec-item {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .rec-item::before {
+            content: "\f05a";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            top: 2px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .rec-item.high-risk::before {
+            color: var(--risk-high);
+        }
+
+        .rec-item.med-risk::before {
+            color: var(--risk-medium);
+        }
+
+        .rec-item.low-risk::before {
+            color: var(--risk-low);
+        }
+
+        /* Medical Disclaimer styling */
+        .disclaimer {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 700px;
+            margin: 2.5rem auto 0 auto;
+            line-height: 1.5;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #app-footer {
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--card-border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Clinical Tooltips Styling */
+        .tooltip-trigger {
+            position: relative;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 0.4rem;
+            display: inline-flex;
+            align-items: center;
+            transition: var(--transition-smooth);
+        }
+
+        .tooltip-trigger:hover {
+            color: var(--primary);
+        }
+
+        .tooltip-trigger::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: rgba(8, 12, 20, 0.95);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            width: 220px;
+            white-space: normal;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .tooltip-trigger:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* Align right-column tooltips to the right so they grow leftwards and avoid screen-edge clipping */
+        .input-grid > *:nth-child(even) .tooltip-trigger::after {
+            left: auto;
+            right: 0;
+            transform: translateX(0) scale(0.9);
+        }
+
+        .input-grid > *:nth-child(even) .tooltip-trigger:hover::after {
+            transform: translateX(0) scale(1);
+        }
+
+        /* Model Decision Force Plot Styling */
+        .force-plot-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 0;
+        }
+
+        .btn-toggle-features {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-top: 1.2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-toggle-features:hover {
+            background: rgba(255, 46, 147, 0.05);
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 46, 147, 0.15);
+        }
+
+        .force-plot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .force-plot-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .force-plot-title i {
+            color: var(--primary);
+        }
+
+        .force-plot-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .force-plot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .force-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .force-bar-label {
+            width: 140px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-main);
+        }
+
+        .force-bar-track {
+            flex: 1;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .force-bar-midpoint {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.25);
+            z-index: 2;
+        }
+
+        .force-bar-fill {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .force-bar-fill.positive {
+            left: 50%;
+            background: linear-gradient(90deg, var(--risk-high-glow), var(--risk-high));
+        }
+
+        .force-bar-fill.negative {
+            right: 50%;
+            background: linear-gradient(270deg, var(--risk-low-glow), var(--risk-low));
+        }
+
+        .force-bar-val {
+            width: 60px;
+            text-align: right;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .force-bar-val.positive {
+            color: var(--risk-high);
+        }
+
+        .force-bar-val.negative {
+            color: var(--risk-low);
+        }
+
+        .force-plot-empty {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 1.5rem 0;
+        }
+
+        .force-plot-legend {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        /* Key Risk Contributions Card */
+        .risk-explanations-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .expl-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .expl-title i {
+            color: var(--risk-medium);
+        }
+
+        .expl-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .expl-item {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .expl-item-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--risk-medium);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .expl-item-icon.severe {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--risk-high);
+        }
+
+        .expl-item-content {
+            flex: 1;
+        }
+
+        .expl-item-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #ffffff;
+            margin-bottom: 0.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expl-item-badge {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .expl-item-badge.severe {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--risk-high);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .expl-item-badge.moderate {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--risk-medium);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .expl-item-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .expl-empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 1.5rem 0;
+        }
+
+        /* What-If Simulator Styling */
+        .simulator-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-top: 3rem;
+            width: 100%;
+        }
+
+        .sim-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1.2rem;
+        }
+
+        .sim-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .sim-header h3 i {
+            color: var(--primary);
+        }
+
+        .sim-header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .sim-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.2rem 2rem;
+        }
+
+        .sim-control {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sim-control label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sim-slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sim-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .sim-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: var(--transition-smooth);
+        }
+
+        .sim-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .sim-val {
+            min-width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+
+
+        /* Sub-Scores Card */
+        .subscores-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .subscores-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .subscores-title i {
+            color: var(--primary);
+        }
+
+        .subscore-row {
+            margin-bottom: 1.25rem;
+        }
+
+        .subscore-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .subscore-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .subscore-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subscore-name i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .subscore-val {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .subscore-bar-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .subscore-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.1, 0.8, 0.25, 1);
+        }
+
+        /* Patient Action Plan */
+        .action-plan-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-plan-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .action-plan-title i {
+            color: var(--primary);
+        }
+
+        .action-plan-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .action-plan-checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .goal-checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 0.85rem 1rem;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .goal-checkbox-wrapper:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .goal-checkbox-wrapper.checked {
+            background: rgba(255, 46, 147, 0.06);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(255, 46, 147, 0.1);
+        }
+
+        .goal-checkbox {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .goal-checkbox-wrapper.checked .goal-checkbox {
+            border-color: var(--primary);
+            background: var(--primary);
+        }
+
+        .goal-checkbox::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 0.75rem;
+            color: #ffffff;
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .goal-checkbox-wrapper.checked .goal-checkbox::after {
+            opacity: 1;
+        }
+
+        .goal-text {
+            font-size: 0.88rem;
+            line-height: 1.4;
+            color: var(--text-main);
+            transition: var(--transition-smooth);
+        }
+
+        .goal-checkbox-wrapper.checked .goal-text {
+            color: var(--text-muted);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        /* Clinician Notes Card */
+        .clinician-notes-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .clinician-notes-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notes-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .clinician-notes-card textarea {
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.8rem;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: var(--transition-smooth);
+        }
+
+        .clinician-notes-card textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Clinician Notes print-only styles on screen (hidden) */
+        .print-notes-section {
+            display: none;
+        }
+
+        /* Print Layout Rules */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #0d172a !important;
+                font-family: 'Inter', sans-serif;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            #app-header, 
+            #app-footer, 
+            .form-nav,
+            .simulator-card,
+            .force-plot-card,
+            .tooltip-trigger,
+            .slider-labels,
+            #form-steps-progress,
+            .intro-section,
+            .clinician-notes-card {
+                display: none !important;
+            }
+            
+            #app-main {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                background: none !important;
+            }
+            
+            #assessment-card {
+                background: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            
+            .results-container {
+                display: block !important;
+                color: #0d172a !important;
+            }
+            
+            .result-header h2 {
+                color: #0f172a !important;
+                font-size: 1.8rem !important;
+                text-align: center;
+                margin-bottom: 0.3rem;
+                font-family: 'Outfit', sans-serif;
+                font-weight: 700;
+            }
+            
+            .result-header p {
+                color: #475569 !important;
+                text-align: center;
+                font-size: 0.9rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            /* Custom Pathology Lab Header */
+            .print-only-header {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: flex-end;
+                border-bottom: 2px solid #0f172a;
+                padding-bottom: 0.8rem;
+                margin-bottom: 1.5rem;
+            }
+            .print-header-left {
+                text-align: left;
+            }
+            .print-logo {
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: #0f172a;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                margin-bottom: 0.1rem;
+                font-family: 'Outfit', sans-serif;
+            }
+            .print-logo i {
+                color: #0284c7;
+            }
+            .print-sublogo {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #475569;
+                margin-bottom: 0.1rem;
+            }
+            .print-contact {
+                font-size: 0.7rem;
+                color: #64748b;
+            }
+            .print-header-right {
+                text-align: right;
+                max-width: 55%;
+            }
+            .print-pdf-title-label {
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #0284c7;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.1rem;
+            }
+            .print-pdf-title-val {
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #0f172a;
+                line-height: 1.2;
+            }
+            
+            /* Pathology Report Grid Layout */
+            .result-layout {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.2rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+            
+            /* Cards in Print */
+            .gauge-card, .prob-section, .rec-section, .risk-explanations-card, .subscores-card, .action-plan-section, .print-notes-section {
+                background: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                box-shadow: none !important;
+                padding: 1.2rem !important;
+                margin: 0 !important;
+                color: #0f172a !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Pathology Border Indicators for Risk level */
+            .gauge-card.risk-low {
+                border-left: 5px solid #10b981 !important;
+            }
+            .gauge-card.risk-medium {
+                border-left: 5px solid #f59e0b !important;
+            }
+            .gauge-card.risk-high {
+                border-left: 5px solid #ef4444 !important;
+            }
+            
+            .gauge-value {
+                color: #0f172a !important;
+                font-size: 2rem !important;
+            }
+            
+            .gauge-label {
+                color: #64748b !important;
+                font-size: 0.75rem !important;
+            }
+            
+            /* Dynamic stroke color on gauge */
+            .gauge-fill {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            /* Threat Tags */
+            .threat-tag {
+                border-radius: 6px !important;
+                padding: 0.4rem 1.2rem !important;
+                font-size: 1.1rem !important;
+                font-weight: 700 !important;
+                display: inline-block !important;
+                text-align: center;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.4rem !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .threat-low {
+                background-color: #d1fae5 !important;
+                color: #065f46 !important;
+                border: 1px solid #10b981 !important;
+            }
+            
+            .threat-medium {
+                background-color: #fef3c7 !important;
+                color: #92400e !important;
+                border: 1px solid #f59e0b !important;
+            }
+            
+            .threat-high {
+                background-color: #fee2e2 !important;
+                color: #991b1b !important;
+                border: 1px solid #ef4444 !important;
+            }
+            
+            .threat-description {
+                color: #475569 !important;
+                font-size: 0.85rem !important;
+                line-height: 1.4 !important;
+            }
+            
+            /* Section Titles inside Cards */
+            .prob-title, .rec-title, .expl-title, .subscores-title, .action-plan-title, .print-notes-section h3, .print-section-title {
+                color: #0f172a !important;
+                border-bottom: 1.5px solid #cbd5e1 !important;
+                padding-bottom: 0.3rem !important;
+                margin-bottom: 1rem !important;
+                font-size: 1rem !important;
+                font-weight: 700 !important;
+                display: flex !important;
+                align-items: center !important;
+                font-family: 'Outfit', sans-serif;
+            }
+            
+            .prob-title i, .rec-title i, .expl-title i, .subscores-title i, .action-plan-title i, .print-notes-section h3 i {
+                color: #0284c7 !important;
+                margin-right: 0.4rem !important;
+            }
+            
+            /* Probability bars in print */
+            .prob-meta {
+                color: #334155 !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .prob-bar-container {
+                background: #f1f5f9 !important;
+                border: 1px solid #cbd5e1 !important;
+                height: 6px !important;
+            }
+            
+            .prob-bar-fill {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+                height: 100% !important;
+            }
+            
+            #bar-prob-Low { background-color: #10b981 !important; }
+            #bar-prob-Medium { background-color: #f59e0b !important; }
+            #bar-prob-High { background-color: #ef4444 !important; }
+            
+            /* Sub-scores in print */
+            .subscore-name {
+                color: #475569 !important;
+                font-size: 0.8rem !important;
+                font-weight: 600 !important;
+            }
+            .subscore-val {
+                color: #0f172a !important;
+                font-size: 0.8rem !important;
+                font-weight: 700 !important;
+            }
+            .subscore-bar-container {
+                background: #f1f5f9 !important;
+                border: 1px solid #cbd5e1 !important;
+                height: 6px !important;
+            }
+            .subscore-bar-fill {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+                height: 100% !important;
+            }
+            #score-bar-lifestyle { background: linear-gradient(90deg, #10b981, #f59e0b) !important; }
+            #score-bar-environmental { background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important; }
+            #score-bar-symptoms { background: linear-gradient(90deg, #f59e0b, #ef4444) !important; }
+            
+            /* Recommendations */
+            .rec-item {
+                color: #334155 !important;
+                font-size: 0.85rem !important;
+                line-height: 1.4 !important;
+                margin-bottom: 0.6rem !important;
+            }
+            
+            .rec-item::before {
+                color: #0284c7 !important;
+            }
+            
+            /* Risk contributions */
+            .expl-item {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 6px !important;
+                padding: 0.6rem 0.8rem !important;
+                margin-bottom: 0.5rem !important;
+                display: flex !important;
+                gap: 0.8rem !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .expl-item-icon {
+                color: #d97706 !important;
+                background: #fffbeb !important;
+                border: 1px solid #fde68a !important;
+                width: 28px !important;
+                height: 28px !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 0.8rem !important;
+                flex-shrink: 0 !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .expl-item-icon.severe {
+                color: #dc2626 !important;
+                background: #fef2f2 !important;
+                border: 1px solid #fecaca !important;
+            }
+            .expl-item-title {
+                color: #0f172a !important;
+                font-size: 0.85rem !important;
+                font-weight: 700 !important;
+            }
+            .expl-item-badge.moderate {
+                color: #b45309 !important;
+                background: #fef3c7 !important;
+                border: 1px solid #fde68a !important;
+                font-size: 0.65rem !important;
+                padding: 0.05rem 0.3rem !important;
+                border-radius: 4px !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .expl-item-badge.severe {
+                color: #b91c1c !important;
+                background: #fee2e2 !important;
+                border: 1px solid #fecaca !important;
+                font-size: 0.65rem !important;
+                padding: 0.05rem 0.3rem !important;
+                border-radius: 4px !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .expl-item-desc {
+                font-size: 0.75rem !important;
+                color: #475569 !important;
+                line-height: 1.3 !important;
+            }
+            
+            /* Patient Info Table Header */
+            .print-patient-info {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 0.8rem 1.2rem !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                padding: 0.8rem 1.2rem !important;
+                margin-bottom: 1.5rem !important;
+                font-size: 0.85rem !important;
+                color: #334155 !important;
+                background: #f8fafc !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .print-patient-info div span {
+                font-weight: 700 !important;
+                color: #0f172a !important;
+            }
+            
+            /* Action Plan checklist in print */
+            .goal-checkbox-wrapper {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 6px !important;
+                padding: 0.4rem 0.75rem !important;
+                margin-bottom: 0.4rem !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 0.6rem !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .goal-checkbox {
+                border: 1.5px solid #0284c7 !important;
+                border-radius: 4px !important;
+                background: transparent !important;
+                width: 14px !important;
+                height: 14px !important;
+            }
+            .goal-checkbox-wrapper.checked {
+                background: #f0f9ff !important;
+                border-color: #bae6fd !important;
+            }
+            .goal-checkbox-wrapper.checked .goal-checkbox {
+                background: #0284c7 !important;
+                border-color: #0284c7 !important;
+            }
+            .goal-checkbox-wrapper.checked .goal-checkbox::after {
+                color: #ffffff !important;
+                font-size: 0.6rem !important;
+                opacity: 1 !important;
+            }
+            .goal-text {
+                color: #334155 !important;
+                font-size: 0.8rem !important;
+                text-decoration: none !important;
+            }
+            
+            /* Print Inputs Section (Parameters Annex) */
+            .print-inputs-section {
+                display: block !important;
+                margin-top: 1.5rem;
+                page-break-inside: avoid;
+            }
+            .print-inputs-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 0 !important;
+                border-top: 1px solid #cbd5e1 !important;
+                border-left: 1px solid #cbd5e1 !important;
+                border-radius: 6px !important;
+                overflow: hidden !important;
+            }
+            .print-input-item {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                border-right: 1px solid #cbd5e1 !important;
+                border-bottom: 1px solid #cbd5e1 !important;
+                padding: 0.4rem 0.6rem !important;
+                font-size: 0.75rem !important;
+                background: #f8fafc !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .print-input-item:nth-child(even) {
+                background: #ffffff !important;
+            }
+            .print-input-label {
+                font-weight: 500 !important;
+                color: #475569 !important;
+            }
+            .print-input-value {
+                font-weight: 700 !important;
+                color: #0f172a !important;
+            }
+            
+            /* Clinician remarks in print */
+            .print-notes-section {
+                display: block !important;
+                margin-top: 1.5rem;
+                page-break-inside: avoid;
+            }
+            .print-notes-content {
+                font-size: 0.85rem !important;
+                line-height: 1.5 !important;
+                color: #1e293b !important;
+                white-space: pre-wrap !important;
+            }
+            
+            /* Signature Block */
+            .print-signature-container {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-end !important;
+                margin-top: 2rem !important;
+                margin-bottom: 1.5rem !important;
+                page-break-inside: avoid;
+            }
+            .signature-item {
+                text-align: center;
+                width: 200px;
+            }
+            .signature-line {
+                border-top: 1px solid #94a3b8;
+                margin-bottom: 0.4rem;
+                width: 100%;
+            }
+            .signature-title {
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+            .signature-name {
+                font-size: 0.8rem;
+                color: #0f172a;
+                margin-top: 0.1rem;
+                font-weight: 600;
+            }
+            .stamp-box {
+                border: 2px dashed #0284c7 !important;
+                border-radius: 8px !important;
+                padding: 0.3rem 0.6rem !important;
+                color: #0284c7 !important;
+                display: inline-block;
+                margin-bottom: 0.8rem;
+                transform: rotate(-4deg);
+                font-family: 'Outfit', sans-serif;
+                letter-spacing: 0.05em;
+                background: rgba(2, 132, 199, 0.05) !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .stamp-box.risk-low {
+                border-color: #10b981 !important;
+                color: #10b981 !important;
+                background: rgba(16, 185, 129, 0.05) !important;
+            }
+            .stamp-box.risk-low .stamp-org {
+                border-bottom-color: #10b981 !important;
+            }
+            .stamp-box.risk-medium {
+                border-color: #f59e0b !important;
+                color: #f59e0b !important;
+                background: rgba(245, 158, 11, 0.05) !important;
+            }
+            .stamp-box.risk-medium .stamp-org {
+                border-bottom-color: #f59e0b !important;
+            }
+            .stamp-box.risk-high {
+                border-color: #ef4444 !important;
+                color: #ef4444 !important;
+                background: rgba(239, 68, 68, 0.05) !important;
+            }
+            .stamp-box.risk-high .stamp-org {
+                border-bottom-color: #ef4444 !important;
+            }
+            .stamp-org {
+                font-size: 0.75rem;
+                border-bottom: 1px dashed #0284c7 !important;
+                padding-bottom: 0.05rem;
+                margin-bottom: 0.05rem;
+                font-weight: 900;
+            }
+            .stamp-status {
+                font-size: 0.85rem;
+                font-weight: 900;
+                letter-spacing: 0.1em;
+            }
+            .stamp-date {
+                font-size: 0.6rem;
+                font-weight: 600;
+            }
+            
+            /* Academic Disclaimer */
+            .disclaimer {
+                display: block !important;
+                border-top: 1px solid #cbd5e1 !important;
+                padding-top: 0.6rem !important;
+                margin-top: 1.5rem !important;
+                font-size: 0.6rem !important;
+                color: #64748b !important;
+                text-align: justify;
+                line-height: 1.3;
+                page-break-inside: avoid;
+            }
+            
+            /* Print Page Setup */
+            @page {
+                size: A4;
+                margin: 15mm 15mm;
+            }
+        }
+
+        /* Hide print-only summary on screen */
+        .print-inputs-section {
+            display: none;
+        }
+
+        /* PDF Upload Component Styling */
+        .pdf-upload-container {
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+        .pdf-dropzone {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .pdf-dropzone:hover, .pdf-dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(255, 46, 147, 0.05);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        .pdf-dropzone.dragover {
+            transform: scale(1.02);
+        }
+        .dropzone-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+        }
+        .dropzone-icon {
+            font-size: 2.2rem;
+            color: var(--primary);
+            transition: var(--transition-smooth);
+            animation: floatUpDown 3s ease-in-out infinite;
+        }
+        .pdf-dropzone:hover .dropzone-icon {
+            transform: scale(1.1);
+        }
+        .dropzone-text-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .dropzone-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .dropzone-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .browse-link {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        .dropzone-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .loader-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+        .upload-status-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            animation: slideInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+        }
+        .upload-status-alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--risk-low);
+            color: var(--risk-low);
+        }
+        .upload-status-alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--risk-high);
+            color: var(--risk-high);
+        }
+        
+        @keyframes floatUpDown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes slideInDown {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Light Theme Overrides for PDF upload */
+        body.light-theme .pdf-dropzone {
+            background: rgba(15, 23, 42, 0.02);
+            border-color: rgba(15, 23, 42, 0.15);
+        }
+        body.light-theme .pdf-dropzone:hover, body.light-theme .pdf-dropzone.dragover {
+            background: rgba(219, 39, 119, 0.05);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        body.light-theme .loader-spinner {
+            border-color: rgba(15, 23, 42, 0.1);
+            border-top-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header component -->
+    <header id="app-header">
+        <div class="logo">
+            <i class="fa-solid fa-microscope"></i> Mady PathLabs
+        </div>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 1rem;">
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark theme">
+                <i class="fa-solid fa-sun"></i>
+            </button>
+            <nav class="nav-links">
+                <a href="https://github.com/madhavgargagra/Lung-Cancer-Prediction" target="_blank" id="nav-github-link"><i class="fa-brands fa-github"></i> GitHub Repository</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main id="app-main">
+        
+        <div class="intro-section" id="intro-header">
+            <h1>Lung Cancer Risk Analyzer</h1>
+            <p>Enter patient demographics, lifestyle habits, and symptoms to evaluate the threat level using an optimized XGBoost predictive model.</p>
+        </div>
+
+        <section id="assessment-card">
+            
+            <!-- Step Progress Indicator -->
+            <div class="step-indicator" id="form-steps-progress">
+                <div class="progress-line" id="indicator-line"></div>
+                <div class="step-dot active" id="dot-1">1<span class="label">Demographics</span></div>
+                <div class="step-dot" id="dot-2">2<span class="label">Lifestyle</span></div>
+                <div class="step-dot" id="dot-3">3<span class="label">Symptoms</span></div>
+            </div>
+
+            <!-- Form element -->
+            <form id="risk-assessment-form" onsubmit="handleFormSubmit(event)">
+                
+                <!-- STEP 1: Demographics -->
+                <div class="form-step active" id="step-1-content">
+                    <h2 class="step-title"><i class="fa-solid fa-user-doctor"></i> Step 1: Patient Demographics</h2>
+                    
+                    <!-- PDF Auto-fill Dropzone -->
+                    <div class="pdf-upload-container">
+                        <div class="pdf-dropzone" id="pdf-dropzone">
+                            <input type="file" id="pdf-file-input" accept=".pdf" style="display: none;">
+                            <div class="dropzone-content" id="dropzone-content-normal">
+                                <div class="dropzone-icon">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div class="dropzone-text-wrapper">
+                                    <span class="dropzone-title">Quick Fill: Upload Existing PDF Report</span>
+                                    <span class="dropzone-desc">Drag & drop a Mady PathLabs PDF report here or <strong class="browse-link">browse files</strong></span>
+                                </div>
+                            </div>
+                            <div class="dropzone-loader" id="dropzone-content-loading" style="display: none;">
+                                <div class="loader-spinner"></div>
+                                <span class="dropzone-title">Extracting report data...</span>
+                            </div>
+                        </div>
+                        <div class="upload-status-alert" id="upload-status-alert" style="display: none;">
+                            <span class="alert-icon"><i class="fa-solid fa-circle-check"></i></span>
+                            <span class="alert-text">Auto-fill complete! Loaded 23 values.</span>
+                        </div>
+                    </div>
+
+                    <div class="input-grid">
+                        <!-- Patient Name -->
+                        <div class="input-group">
+                            <label for="input-PatientName"><span>Patient Name</span></label>
+                            <input type="text" id="input-PatientName" name="PatientName" class="text-input" placeholder="e.g. John Doe" required>
+                        </div>
+                        
+                        <!-- Patient ID -->
+                        <div class="input-group">
+                            <label for="input-PatientID"><span>Patient ID / MRN</span></label>
+                            <input type="text" id="input-PatientID" name="PatientID" class="text-input" placeholder="e.g. MRN-12345" required>
+                        </div>
+
+                        <!-- Age -->
+                        <div class="input-group">
+                            <label for="input-Age"><span>Age <span class="feature-info">(Years, 14-80)</span></span><span class="tooltip-trigger" data-tooltip="Cellular damage and genetic mutations accumulate in lung tissue over time, increasing cancer risk."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <input type="number" id="input-Age" name="Age" class="text-input" min="14" max="80" value="40" required>
+                        </div>
+                        
+                        <!-- Gender -->
+                        <div class="input-group">
+                            <label><span>Gender <span class="feature-info">(Assigned Sex)</span></span><span class="tooltip-trigger" data-tooltip="Susceptibility and historical exposure profiles differ by biological sex."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="gender-options">
+                                <div class="gender-card selected" id="gender-male" onclick="selectGender(1)">
+                                    <i class="fa-solid fa-mars"></i> Male
+                                    <input type="radio" name="Gender" value="1" checked>
+                                </div>
+                                <div class="gender-card" id="gender-female" onclick="selectGender(2)">
+                                    <i class="fa-solid fa-venus"></i> Female
+                                    <input type="radio" name="Gender" value="2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-nav">
+                        <div></div> <!-- spacer -->
+                        <button type="button" class="btn btn-next" onclick="navigateStep(1, 2)">Next Step <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Lifestyle & Exposures -->
+                <div class="form-step" id="step-2-content">
+                    <h2 class="step-title"><i class="fa-solid fa-lungs"></i> Step 2: Lifestyle & Exposures</h2>
+                    
+                    <div class="input-grid">
+                        <!-- Smoking -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Active Smoking <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Direct inhalation of tobacco smoke introduces over 70 carcinogens that bind directly to lung cell DNA."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Smoking" min="1" max="8" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Never</span>
+                                <span>8 - Heavy</span>
+                            </div>
+                        </div>
+
+                        <!-- Passive Smoker -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Passive Smoking <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Inhaling secondhand tobacco smoke exposes non-smokers to the same cancer-causing chemicals."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Passive Smoker" min="1" max="8" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - None</span>
+                                <span>8 - Extreme</span>
+                            </div>
+                        </div>
+
+                        <!-- Air Pollution -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Air Pollution Exposure <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Inhaling fine particulate matter (PM2.5) and industrial smog triggers lung cell DNA damage."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Air Pollution" min="1" max="8" value="4" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">4</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Clean Air</span>
+                                <span>8 - Heavy Smog</span>
+                            </div>
+                        </div>
+
+                        <!-- Alcohol use -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Alcohol Consumption <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Excessive alcohol consumption suppresses the immune system and weakens cellular defense mechanisms."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Alcohol use" min="1" max="8" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - None</span>
+                                <span>8 - Severe Intake</span>
+                            </div>
+                        </div>
+
+                        <!-- Dust Allergy -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Dust Allergy Severity <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Chronic airway irritation from dust and allergens leads to long-term pulmonary inflammation."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Dust Allergy" min="1" max="8" value="4" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">4</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - No Allergy</span>
+                                <span>8 - Extreme Response</span>
+                            </div>
+                        </div>
+
+                        <!-- OccuPational Hazards -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Occupational Hazards <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Long-term inhalation of toxic dust (e.g., asbestos, silica, or heavy metals) is highly carcinogenic."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="OccuPational Hazards" min="1" max="8" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Safe Worksite</span>
+                                <span>8 - Asbestos/Chemicals</span>
+                            </div>
+                        </div>
+
+                        <!-- Genetic Risk -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Family Genetic Risk <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="Having immediate family members with lung cancer increases hereditary genetic vulnerability."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Genetic Risk" min="1" max="7" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - No History</span>
+                                <span>7 - High Family History</span>
+                            </div>
+                        </div>
+
+                        <!-- chronic Lung Disease -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Chronic Lung Disease History <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="Pre-existing conditions like COPD or emphysema reduce the lungs' capacity to repair cellular damage."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="chronic Lung Disease" min="1" max="7" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Healthy Lungs</span>
+                                <span>7 - Severe COPD/Asthma</span>
+                            </div>
+                        </div>
+
+                        <!-- Balanced Diet -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Balanced Diet Quality <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="High intake of fruits and vegetables supplies essential antioxidants that protect cells from oxidative stress."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Balanced Diet" min="1" max="7" value="4" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">4</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Highly Unbalanced</span>
+                                <span>7 - Excellent/Organic</span>
+                            </div>
+                        </div>
+
+                        <!-- Obesity -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Obesity Level <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="Excess fat tissue promotes chronic low-grade systemic inflammation throughout the body."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Obesity" min="1" max="7" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Under/Normal Weight</span>
+                                <span>7 - Severely Obese</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-nav">
+                        <button type="button" class="btn btn-prev" onclick="navigateStep(2, 1)"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+                        <button type="button" class="btn btn-next" onclick="navigateStep(2, 3)">Next Step <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Symptoms -->
+                <div class="form-step" id="step-3-content">
+                    <h2 class="step-title"><i class="fa-solid fa-stethoscope"></i> Step 3: Symptom Assessment</h2>
+                    
+                    <div class="input-grid">
+                        <!-- Chest Pain -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Chest Pain Severity <span class="feature-info">(Scale 1-9)</span></span><span class="tooltip-trigger" data-tooltip="Persistent chest discomfort can indicate a growing pulmonary lesion pressing on thoracic nerves."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Chest Pain" min="1" max="9" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - None</span>
+                                <span>9 - Severe/Constant</span>
+                            </div>
+                        </div>
+
+                        <!-- Coughing of Blood -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Coughing of Blood (Hemoptysis) <span class="feature-info">(Scale 1-9)</span></span><span class="tooltip-trigger" data-tooltip="Known as Hemoptysis. A major symptom caused by airway erosion or bleeding from tumor vessels."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Coughing of Blood" min="1" max="9" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Never</span>
+                                <span>9 - Daily/Heavy</span>
+                            </div>
+                        </div>
+
+                        <!-- Fatigue -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Fatigue Level <span class="feature-info">(Scale 1-9)</span></span><span class="tooltip-trigger" data-tooltip="Unexplained, severe exhaustion occurs when cancer cells consume the body's energy reserves."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Fatigue" min="1" max="9" value="4" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">4</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Energetic</span>
+                                <span>9 - Constant Exhaustion</span>
+                            </div>
+                        </div>
+
+                        <!-- Shortness of Breath -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Shortness of Breath (Dyspnea) <span class="feature-info">(Scale 1-9)</span></span><span class="tooltip-trigger" data-tooltip="Known as Dyspnea. Caused by airway blockages or tumor fluid buildup restricting lung expansion."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Shortness of Breath" min="1" max="9" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Normal breathing</span>
+                                <span>9 - Gasping at rest</span>
+                            </div>
+                        </div>
+
+                        <!-- Weight Loss -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Unexplained Weight Loss <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Unintentional weight loss (cachexia) happens as tumors alter systemic metabolism and burn calories."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Weight Loss" min="1" max="8" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Stable Weight</span>
+                                <span>8 - Rapid Drop</span>
+                            </div>
+                        </div>
+
+                        <!-- Wheezing -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Wheezing Frequency <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="A whistling sound during breathing caused by narrowed, obstructed, or inflamed bronchial tubes."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Wheezing" min="1" max="8" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Clear Lungs</span>
+                                <span>8 - Loud/Constant</span>
+                            </div>
+                        </div>
+
+                        <!-- Swallowing Difficulty -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Difficulty Swallowing <span class="feature-info">(Scale 1-8)</span></span><span class="tooltip-trigger" data-tooltip="Known as Dysphagia. Can indicate a thoracic tumor compressing the esophagus."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Swallowing Difficulty" min="1" max="8" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - No issue</span>
+                                <span>8 - Painful/Obstruction</span>
+                            </div>
+                        </div>
+
+                        <!-- Clubbing of Finger Nails -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Clubbing of Finger Nails <span class="feature-info">(Scale 1-9)</span></span><span class="tooltip-trigger" data-tooltip="Rounded, bulbous fingernails signal chronic tissue hypoxia (persistent low blood oxygen)."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Clubbing of Finger Nails" min="1" max="9" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Normal</span>
+                                <span>9 - Severe Curvature</span>
+                            </div>
+                        </div>
+
+                        <!-- Frequent Cold -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Frequent Colds/Infections <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="Constantly catching respiratory infections indicates compromised pulmonary local immunity."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Frequent Cold" min="1" max="7" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Rare</span>
+                                <span>7 - Continuous</span>
+                            </div>
+                        </div>
+
+                        <!-- Dry Cough -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Dry Cough Severity <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="A chronic, unproductive cough signals continuous irritation of the bronchial lining."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Dry Cough" min="1" max="7" value="3" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">3</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Occasional</span>
+                                <span>7 - Painful Hack</span>
+                            </div>
+                        </div>
+
+                        <!-- Snoring -->
+                        <div class="input-group slider-wrapper">
+                            <label><span>Heavy Snoring <span class="feature-info">(Scale 1-7)</span></span><span class="tooltip-trigger" data-tooltip="Loud snoring or sleep apnea causes intermittent blood oxygen drops, straining lung tissue."><i class="fa-solid fa-circle-info"></i></span></label>
+                            <div class="slider-container">
+                                <input type="range" name="Snoring" min="1" max="7" value="2" class="range-slider" oninput="updateSliderBadge(this)">
+                                <div class="slider-val-badge">2</div>
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Silent Sleep</span>
+                                <span>7 - Loud Apnea</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-nav">
+                        <button type="button" class="btn btn-prev" onclick="navigateStep(3, 2)"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+                        <button type="submit" class="btn btn-submit" id="submit-assessment-btn"><i class="fa-solid fa-calculator"></i> Run Diagnostics</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Loading overlay -->
+            <div class="loading-overlay" id="loading-diagnostics">
+                <div class="spinner"></div>
+                <div class="loading-text">Analyzing clinical indices using XGBoost...</div>
+            </div>
+
+            <!-- Assessment Results Panel -->
+            <div class="results-container" id="assessment-results">
+                <!-- Custom Pathology Lab Header -->
+                <div class="print-only-header" style="display: none;">
+                    <div class="print-header-left">
+                        <div class="print-logo"><i class="fa-solid fa-microscope"></i> Mady PathLabs</div>
+                        <div class="print-sublogo">Clinical Diagnostics & Pathology Division</div>
+                        <div class="print-contact">102 Medical Park Drive, Cyber City | contact@madypathlabs.com | +1 (555) 019-2834</div>
+                    </div>
+                    <div class="print-header-right">
+                        <div class="print-pdf-title-label">LABORATORY REPORT</div>
+                        <div id="print-report-title" class="print-pdf-title-val">[N/A] N/A - Mady PathLabs Lung Cancer Risk Assessment</div>
+                    </div>
+                </div>
+                
+                <div class="print-patient-info" style="display: none;" id="print-patient-info-summary">
+                    <div><span>Patient Name:</span> <span id="print-name">N/A</span></div>
+                    <div><span>Patient ID / MRN:</span> <span id="print-id">N/A</span></div>
+                    <div><span>Report Date:</span> <span id="print-date"></span></div>
+                    <div><span>Age:</span> <span id="print-age">N/A</span></div>
+                    <div><span>Gender:</span> <span id="print-gender">N/A</span></div>
+                    <div><span>Assessing Dept:</span> <span>Pulmonary Diagnostics</span></div>
+                </div>
+
+                <div class="result-header">
+                    <h2>Diagnostic Summary</h2>
+                    <p>Results processed based on patient's symptoms and risk indicators.</p>
+                </div>
+                
+                <div class="result-layout">
+                    <!-- Column 1: Primary Metrics & Recommendations -->
+                    <div>
+                        <div class="gauge-card">
+                            <div class="gauge-svg-wrapper">
+                                <svg viewBox="0 0 180 180">
+                                    <circle class="gauge-track" cx="90" cy="90" r="80"></circle>
+                                    <circle class="gauge-fill" id="gauge-probability-fill" cx="90" cy="90" r="80"></circle>
+                                </svg>
+                                <div class="gauge-center-text">
+                                    <div class="gauge-value" id="gauge-probability-value">0%</div>
+                                    <div class="gauge-label">Confidence</div>
+                                </div>
+                            </div>
+                            
+                            <div class="threat-tag" id="threat-level-badge">LOW</div>
+                            <p class="threat-description" id="threat-summary">The model predicts a low threat level. Maintain regular exercise and a balanced diet.</p>
+                        </div>
+                        
+                        <div class="rec-section">
+                            <h3 class="rec-title"><i class="fa-solid fa-shield-halved"></i> Action Recommendations</h3>
+                            <ul class="rec-list" id="recommendations-container">
+                                <!-- Populated dynamically by JS -->
+                            </ul>
+                        </div>
+                        
+                        <!-- Patient Action Plan Card -->
+                        <div class="action-plan-section">
+                            <h3 class="action-plan-title"><i class="fa-solid fa-list-check"></i> My Personal Action Plan</h3>
+                            <p class="action-plan-subtitle">Customize your clinical action plan. Check off goals you commit to focusing on:</p>
+                            <div class="action-plan-checklist" id="action-plan-checklist-container">
+                                <!-- Populated dynamically based on risks -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 2: Probability Distribution & Key Risk Contributions -->
+                    <div>
+                        <div class="prob-section">
+                            <h3 class="prob-title">Probability Distribution</h3>
+                            
+                            <!-- Low Risk Row -->
+                            <div class="prob-row">
+                                <div class="prob-meta">
+                                    <span>Low Threat Level</span>
+                                    <span id="val-prob-Low">0%</span>
+                                </div>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar-fill" id="bar-prob-Low" style="background-color: var(--risk-low);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Medium Risk Row -->
+                            <div class="prob-row">
+                                <div class="prob-meta">
+                                    <span>Medium Threat Level</span>
+                                    <span id="val-prob-Medium">0%</span>
+                                </div>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar-fill" id="bar-prob-Medium" style="background-color: var(--risk-medium);"></div>
+                                </div>
+                            </div>
+
+                            <!-- High Risk Row -->
+                            <div class="prob-row">
+                                <div class="prob-meta">
+                                    <span>High Threat Level</span>
+                                    <span id="val-prob-High">0%</span>
+                                </div>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar-fill" id="bar-prob-High" style="background-color: var(--risk-high);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Category Sub-Scores Card -->
+                        <div class="subscores-card">
+                            <h3 class="subscores-title"><i class="fa-solid fa-chart-pie"></i> Risk Category Profiles</h3>
+                            <div class="subscores-list">
+                                <!-- Lifestyle -->
+                                <div class="subscore-row">
+                                    <div class="subscore-meta">
+                                        <span class="subscore-name"><i class="fa-solid fa-person-running"></i> Lifestyle & Habits</span>
+                                        <span class="subscore-val" id="score-val-lifestyle">0%</span>
+                                    </div>
+                                    <div class="subscore-bar-container">
+                                        <div class="subscore-bar-fill" id="score-bar-lifestyle" style="width: 0%; background: linear-gradient(90deg, #10b981, #f59e0b);"></div>
+                                    </div>
+                                </div>
+                                <!-- Environmental/Occupational -->
+                                <div class="subscore-row">
+                                    <div class="subscore-meta">
+                                        <span class="subscore-name"><i class="fa-solid fa-industry"></i> Environment & Occupational</span>
+                                        <span class="subscore-val" id="score-val-environmental">0%</span>
+                                    </div>
+                                    <div class="subscore-bar-container">
+                                        <div class="subscore-bar-fill" id="score-bar-environmental" style="width: 0%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);"></div>
+                                    </div>
+                                </div>
+                                <!-- Symptoms -->
+                                <div class="subscore-row">
+                                    <div class="subscore-meta">
+                                        <span class="subscore-name"><i class="fa-solid fa-heart-pulse"></i> Symptom Severity</span>
+                                        <span class="subscore-val" id="score-val-symptoms">0%</span>
+                                    </div>
+                                    <div class="subscore-bar-container">
+                                        <div class="subscore-bar-fill" id="score-bar-symptoms" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Risk Contributions -->
+                        <div class="risk-explanations-card" id="risk-explanations-section">
+                            <h3 class="expl-title"><i class="fa-solid fa-triangle-exclamation"></i> Key Risk Contributions</h3>
+                            <div class="expl-list" id="risk-explanations-list">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Model Decision Pull (SHAP-style) -->
+                    <div>
+                        <div class="force-plot-card">
+                            <div class="force-plot-header">
+                                <h3 class="force-plot-title"><i class="fa-solid fa-chart-bar"></i> Model Decision Pull</h3>
+                                <span class="force-plot-subtitle">Pushes Risk Higher (Red) or Lower (Green)</span>
+                            </div>
+                            <div class="force-plot-list" id="force-plot-container">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                            <div class="force-plot-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: var(--risk-low);"></div>
+                                    <span>Protective / Reducer</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: var(--risk-high);"></div>
+                                    <span>Risk Contributor</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What-If Simulator Card -->
+                <div class="simulator-card" id="simulator-section">
+                    <div class="sim-header">
+                        <h3><i class="fa-solid fa-sliders"></i> Interactive "What-If" Risk Simulator</h3>
+                        <p>Adjust critical parameters below to see how changes to lifestyle or symptoms instantly affect the predicted threat level.</p>
+                    </div>
+                    <div class="sim-grid">
+                        <!-- Smoking -->
+                        <div class="sim-control">
+                            <label for="sim-Smoking">Active Smoking <span class="feature-info">(Scale 1-8)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Smoking" min="1" max="8" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                        <!-- Balanced Diet -->
+                        <div class="sim-control">
+                            <label for="sim-Balanced Diet">Balanced Diet <span class="feature-info">(Scale 1-7, High is Protective)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Balanced Diet" min="1" max="7" value="7" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">7</span>
+                            </div>
+                        </div>
+                        <!-- Alcohol use -->
+                        <div class="sim-control">
+                            <label for="sim-Alcohol use">Alcohol Use <span class="feature-info">(Scale 1-8)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Alcohol use" min="1" max="8" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                        <!-- Passive Smoker -->
+                        <div class="sim-control">
+                            <label for="sim-Passive Smoker">Passive Smoking <span class="feature-info">(Scale 1-8)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Passive Smoker" min="1" max="8" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                        <!-- Air Pollution -->
+                        <div class="sim-control">
+                            <label for="sim-Air Pollution">Air Pollution <span class="feature-info">(Scale 1-8)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Air Pollution" min="1" max="8" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                        <!-- Chest Pain -->
+                        <div class="sim-control">
+                            <label for="sim-Chest Pain">Chest Pain Severity <span class="feature-info">(Scale 1-9)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Chest Pain" min="1" max="9" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                        <!-- Coughing of Blood -->
+                        <div class="sim-control">
+                            <label for="sim-Coughing of Blood">Coughing of Blood <span class="feature-info">(Scale 1-9)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Coughing of Blood" min="1" max="9" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                        <!-- Shortness of Breath -->
+                        <div class="sim-control">
+                            <label for="sim-Shortness of Breath">Shortness of Breath <span class="feature-info">(Scale 1-9)</span></label>
+                            <div class="sim-slider-wrapper">
+                                <input type="range" id="sim-Shortness of Breath" min="1" max="9" value="1" class="sim-slider" oninput="handleSimSliderChange(this)">
+                                <span class="sim-val">1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Entered Values Section (Print-Only) -->
+                <div class="print-inputs-section" id="print-inputs-container">
+                    <h3 class="print-section-title">Submitted Patient Parameters</h3>
+                    <div class="print-inputs-grid" id="print-inputs-grid-content">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </div>
+
+                <!-- Print-Only Clinician Remarks Section -->
+                <div class="print-notes-section">
+                    <h3>Clinician's Remarks & Consultation Notes</h3>
+                    <div class="print-notes-content" id="print-notes-display">No remarks entered.</div>
+                </div>
+
+                <!-- Print-Only Signature Block & Verified Stamp -->
+                <div class="print-signature-container" style="display: none;">
+                    <div class="signature-item">
+                        <div class="signature-line"></div>
+                        <div class="signature-title">Medical Lab Technologist</div>
+                        <div class="signature-name">Mady PathLabs Staff</div>
+                    </div>
+                    <div class="signature-item pathology-stamp">
+                        <div class="stamp-box">
+                            <div class="stamp-org">MADY PATHLABS</div>
+                            <div class="stamp-status">VERIFIED</div>
+                            <div class="stamp-date" id="print-stamp-date">5/22/2026</div>
+                        </div>
+                        <div class="signature-line"></div>
+                        <div class="signature-title">Chief Pathologist</div>
+                        <div class="signature-name">Dr. Aris Thorne, MD</div>
+                    </div>
+                </div>
+
+                <!-- Clinician Notes Card (Screen Only) -->
+                <div class="clinician-notes-card">
+                    <h3><i class="fa-solid fa-file-signature"></i> Clinician Consultation Notes</h3>
+                    <p class="notes-hint">Add observations, treatment suggestions, or follow-up timelines. This information is included in the printed report only.</p>
+                    <textarea id="clinician-notes-input" placeholder="Enter clinical remarks, consultation summary, or patient action steps..." oninput="updatePrintNotes(this.value)"></textarea>
+                </div>
+
+                <div class="form-nav">
+                    <button type="button" class="btn btn-prev" onclick="resetAssessmentForm()"><i class="fa-solid fa-rotate-left"></i> Run Another Assessment</button>
+                    <button type="button" class="btn btn-submit" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Print / Save PDF Report</button>
+                </div>
+            </div>
+
+            <!-- Disclaimer Component -->
+            <div class="disclaimer">
+                <strong>Important Notice & Disclaimer:</strong> This application is powered by a machine learning model developed for college academic coursework (ML Project, Semester 4). The output is based strictly on statistical associations in training data and does NOT constitute medical diagnosis, advice, or expert prognosis. Always seek the advice of a qualified physician or pulmonologist with any questions you may have regarding a medical condition.
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="app-footer">
+        <p>&copy; 2026 Mady PathLabs Project. Built for Semester 4 Machine Learning Coursework.</p>
+    </footer>
+
+    <!-- JS Logic -->
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+        let activeAssessmentData = {};
+        let simDebounceTimer = null;
+        let activeContributions = [];
+        let showAllContributions = false;
+
+
+
+        // Calculate sub-scores and update UI bars in real-time
+        function calculateSubScores(data) {
+            // Lifestyle & Habits: Smoking (1-8), Passive Smoker (1-8), Alcohol use (1-8), Obesity (1-7), Balanced Diet (1-7, Inverted)
+            const smokingVal = parseFloat(data['Smoking'] || 1);
+            const passiveVal = parseFloat(data['Passive Smoker'] || 1);
+            const alcoholVal = parseFloat(data['Alcohol use'] || 1);
+            const obesityVal = parseFloat(data['Obesity'] || 1);
+            const dietVal = parseFloat(data['Balanced Diet'] || 7);
+            const lifestyleSum = (smokingVal - 1) + (passiveVal - 1) + (alcoholVal - 1) + (obesityVal - 1) + (7 - dietVal);
+            const lifestylePct = Math.min(100, Math.max(0, Math.round((lifestyleSum / 33) * 100)));
+
+            // Environmental/Occupational: Air Pollution (1-8), Dust Allergy (1-8), OccuPational Hazards (1-8), Genetic Risk (1-7), chronic Lung Disease (1-7)
+            const airVal = parseFloat(data['Air Pollution'] || 1);
+            const dustVal = parseFloat(data['Dust Allergy'] || 1);
+            const occVal = parseFloat(data['OccuPational Hazards'] || 1);
+            const genVal = parseFloat(data['Genetic Risk'] || 1);
+            const chronicVal = parseFloat(data['chronic Lung Disease'] || 1);
+            const envSum = (airVal - 1) + (dustVal - 1) + (occVal - 1) + (genVal - 1) + (chronicVal - 1);
+            const envPct = Math.min(100, Math.max(0, Math.round((envSum / 33) * 100)));
+
+            // Symptom Severity: 11 symptom items
+            const symptomsKeys = [
+                'Chest Pain', 'Coughing of Blood', 'Fatigue', 'Weight Loss',
+                'Shortness of Breath', 'Wheezing', 'Swallowing Difficulty',
+                'Clubbing of Finger Nails', 'Frequent Cold', 'Dry Cough', 'Snoring'
+            ];
+            let symptomsSum = 0;
+            symptomsKeys.forEach(k => {
+                symptomsSum += (parseFloat(data[k] || 1) - 1);
+            });
+            const symptomsPct = Math.min(100, Math.max(0, Math.round((symptomsSum / 81) * 100)));
+
+            // Update DOM progress display
+            const lifestyleValElem = document.getElementById('score-val-lifestyle');
+            const lifestyleBarElem = document.getElementById('score-bar-lifestyle');
+            if (lifestyleValElem) lifestyleValElem.innerText = `${lifestylePct}%`;
+            if (lifestyleBarElem) lifestyleBarElem.style.width = `${lifestylePct}%`;
+
+            const envValElem = document.getElementById('score-val-environmental');
+            const envBarElem = document.getElementById('score-bar-environmental');
+            if (envValElem) envValElem.innerText = `${envPct}%`;
+            if (envBarElem) envBarElem.style.width = `${envPct}%`;
+
+            const symptomsValElem = document.getElementById('score-val-symptoms');
+            const symptomsBarElem = document.getElementById('score-bar-symptoms');
+            if (symptomsValElem) symptomsValElem.innerText = `${symptomsPct}%`;
+            if (symptomsBarElem) symptomsBarElem.style.width = `${symptomsPct}%`;
+        }
+
+        // Render dynamic patient action plan list
+        function renderActionPlan(data) {
+            const container = document.getElementById('action-plan-checklist-container');
+            if (!container) return;
+
+            // Track currently checked goals to preserve state on simulator slider changes
+            const checkedGoals = new Set();
+            container.querySelectorAll('.goal-checkbox-wrapper.checked').forEach(wrapper => {
+                const textNode = wrapper.querySelector('.goal-text');
+                if (textNode) {
+                    checkedGoals.add(textNode.innerText.trim());
+                }
+            });
+
+            container.innerHTML = '';
+            const goals = [];
+
+            // Evaluate high-risk indicators
+            if (parseFloat(data['Smoking'] || 1) > 2) {
+                goals.push("Commit to active smoking cessation program to let lung tissue recover.");
+            }
+            if (parseFloat(data['Passive Smoker'] || 1) > 2) {
+                goals.push("Minimize exposure to secondhand smoke in household and social settings.");
+            }
+            if (parseFloat(data['Air Pollution'] || 1) > 4 || parseFloat(data['Dust Allergy'] || 1) > 4) {
+                goals.push("Use N95 respirators on high-smog days and run a HEPA air filter in main rooms.");
+            }
+            if (parseFloat(data['OccuPational Hazards'] || 1) > 4) {
+                goals.push("Ensure workplace compliance: always wear protective respiratory gear on site.");
+            }
+            if (parseFloat(data['Alcohol use'] || 1) > 4) {
+                goals.push("Reduce weekly alcohol consumption to boost overall immune response.");
+            }
+            if (parseFloat(data['Balanced Diet'] || 7) < 5) {
+                goals.push("Enrich daily diet with green vegetables and antioxidant-rich organic foods.");
+            }
+            if (parseFloat(data['Obesity'] || 1) > 4) {
+                goals.push("Adopt structured portion control and light cardiovascular exercise to lower BMI.");
+            }
+            if (parseFloat(data['chronic Lung Disease'] || 1) > 3) {
+                goals.push("Schedule routine spirometry and pulmonary monitoring check-ups with your doctor.");
+            }
+
+            // Fill with general wellness guidelines if goals count < 3
+            if (goals.length < 3) {
+                const generalGoals = [
+                    "Engage in 30 minutes of daily moderate activity to support pulmonary capacity.",
+                    "Maintain a regular sleep schedule to optimize daily energy and cellular repair.",
+                    "Schedule an annual routine health check-up for comprehensive respiratory evaluation."
+                ];
+                generalGoals.forEach(g => {
+                    if (goals.length < 3 && !goals.includes(g)) {
+                        goals.push(g);
+                    }
+                });
+            }
+
+            // Render goal items
+            goals.forEach(goalText => {
+                const wrapper = document.createElement('div');
+                const isChecked = checkedGoals.has(goalText.trim());
+                wrapper.className = `goal-checkbox-wrapper ${isChecked ? 'checked' : ''}`;
+                wrapper.innerHTML = `
+                    <div class="goal-checkbox"></div>
+                    <div class="goal-text">${goalText}</div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+
+        // Dynamic API routing wrapper for cross-origin or local filesystem preview compatibility
+        const getApiUrl = (path) => {
+            if (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '5000')) {
+                return `http://127.0.0.1:5000${path}`;
+            }
+            return path;
+        };
+
+        const RISK_EXPLANATION_METADATA = {
+            'Smoking': { name: 'Active Smoking', desc: 'Smoking damages lung cells and is the leading cause of lung cancer.', severeThresh: 5, icon: 'fa-smoking', max: 8 },
+            'Passive Smoker': { name: 'Passive Smoking Exposure', desc: 'Secondhand smoke contains toxic chemicals that damage lung tissue.', severeThresh: 5, icon: 'fa-users-slash', max: 8 },
+            'Air Pollution': { name: 'Air Pollution Exposure', desc: 'Inhaling particulate matter and environmental pollutants degrades lung health.', severeThresh: 6, icon: 'fa-smog', max: 8 },
+            'Dust Allergy': { name: 'Dust & Allergen Sensitivity', desc: 'Frequent allergen irritation causes chronic airway inflammation.', severeThresh: 6, icon: 'fa-mask-face', max: 8 },
+            'OccuPational Hazards': { name: 'Occupational Hazards', desc: 'Exposure to chemical fumes, asbestos, or industrial dust increases risk.', severeThresh: 5, icon: 'fa-industry', max: 8 },
+            'Genetic Risk': { name: 'Genetic Predisposition', desc: 'A family history of lung conditions increases susceptibility.', severeThresh: 5, icon: 'fa-dna', max: 7 },
+            'chronic Lung Disease': { name: 'Chronic Lung Disease', desc: 'Pre-existing respiratory conditions like COPD weaken lung defenses.', severeThresh: 5, icon: 'fa-lungs', max: 7 },
+            'Alcohol use': { name: 'High Alcohol Intake', desc: 'Excessive alcohol consumption impairs immune response and systemic health.', severeThresh: 6, icon: 'fa-wine-glass', max: 8 },
+            'Obesity': { name: 'Obesity Index', desc: 'High body mass is linked to systemic inflammation and reduced lung capacity.', severeThresh: 6, icon: 'fa-weight-scale', max: 7 },
+            'Chest Pain': { name: 'Chest Pain Severity', desc: 'Persistent thoracic discomfort can indicate underlying respiratory stress.', severeThresh: 5, icon: 'fa-heart-crack', max: 9 },
+            'Coughing of Blood': { name: 'Hemoptysis (Coughing Blood)', desc: 'Coughing up blood is a critical symptom requiring urgent medical evaluation.', severeThresh: 3, icon: 'fa-droplet', max: 9 },
+            'Shortness of Breath': { name: 'Dyspnea (Shortness of Breath)', desc: 'Severe breathing difficulty indicates impaired lung ventilation.', severeThresh: 5, icon: 'fa-wind', max: 9 },
+            'Swallowing Difficulty': { name: 'Dysphagia (Swallowing Difficulty)', desc: 'Difficulty swallowing can point to localized esophageal or chest pressure.', severeThresh: 5, icon: 'fa-circle-exclamation', max: 8 },
+            'Clubbing of Finger Nails': { name: 'Nail Clubbing', desc: 'Clubbed fingernails often signal chronic low blood oxygen levels.', severeThresh: 4, icon: 'fa-hand', max: 9 }
+        };
+
+        // Sync gender selector visual status
+        function selectGender(genderVal) {
+            const maleCard = document.getElementById('gender-male');
+            const femaleCard = document.getElementById('gender-female');
+            
+            if (genderVal === 1) {
+                maleCard.classList.add('selected');
+                femaleCard.classList.remove('selected');
+                maleCard.querySelector('input').checked = true;
+                femaleCard.querySelector('input').checked = false;
+            } else {
+                femaleCard.classList.add('selected');
+                maleCard.classList.remove('selected');
+                femaleCard.querySelector('input').checked = true;
+                maleCard.querySelector('input').checked = false;
+            }
+        }
+
+        // Sync visual text value on slider movement
+        function updateSliderBadge(slider) {
+            const badge = slider.nextElementSibling;
+            badge.innerText = slider.value;
+        }
+
+        // Multi-step navigation wizard logic
+        function navigateStep(fromStep, toStep) {
+            // Validation for Step 1
+            if (fromStep === 1 && toStep === 2) {
+                const nameInput = document.getElementById('input-PatientName');
+                const idInput = document.getElementById('input-PatientID');
+                if (!nameInput.value.trim()) {
+                    alert('Please enter a patient name.');
+                    nameInput.focus();
+                    return;
+                }
+                if (!idInput.value.trim()) {
+                    alert('Please enter a Patient ID / MRN.');
+                    idInput.focus();
+                    return;
+                }
+                const ageInput = document.getElementById('input-Age');
+                if (!ageInput.value || parseInt(ageInput.value) < 14 || parseInt(ageInput.value) > 80) {
+                    alert('Please enter a valid age between 14 and 80.');
+                    ageInput.focus();
+                    return;
+                }
+            }
+
+            // Hide active step content
+            document.getElementById(`step-${fromStep}-content`).classList.remove('active');
+            
+            // Show target step content
+            document.getElementById(`step-${toStep}-content`).classList.add('active');
+            
+            // Update active dot in progress indicator
+            document.getElementById(`dot-${fromStep}`).classList.remove('active');
+            if (toStep > fromStep) {
+                document.getElementById(`dot-${fromStep}`).classList.add('completed');
+            } else {
+                document.getElementById(`dot-${toStep}`).classList.remove('completed');
+            }
+            document.getElementById(`dot-${toStep}`).classList.add('active');
+
+            // Update progress timeline width percentage
+            const progressPct = ((toStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('indicator-line').style.width = `${progressPct}%`;
+            
+            currentStep = toStep;
+        }
+
+        // Submit form data to Flask API
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            // Collect form data
+            const form = document.getElementById('risk-assessment-form');
+            const formData = new FormData(form);
+            const dataObj = {};
+            
+            // Include radio values and text fields
+            for (const [key, value] of formData.entries()) {
+                dataObj[key] = value;
+            }
+            
+            // Add gender value explicitly since custom radio is used
+            const selectedGenderInput = document.querySelector('.gender-card.selected input');
+            dataObj['Gender'] = selectedGenderInput ? selectedGenderInput.value : "1";
+            
+            // Switch layout to loading screen
+            document.getElementById('step-3-content').classList.remove('active');
+            document.getElementById('form-steps-progress').style.opacity = '0.3';
+            document.getElementById('loading-diagnostics').classList.add('active');
+            
+            try {
+                // Filter out non-model parameters from API payload
+                const apiPayload = { ...dataObj };
+                delete apiPayload['PatientName'];
+                delete apiPayload['PatientID'];
+
+                const response = await fetch(getApiUrl('/predict'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(apiPayload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Slight delay to make the UX feel like it is analyzing
+                    setTimeout(() => {
+                        displayAssessmentResults(result, dataObj);
+                    }, 800);
+                } else {
+                    throw new Error(result.error || 'Server prediction error.');
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+                // Re-enable step 3 content on failure
+                document.getElementById('loading-diagnostics').classList.remove('active');
+                document.getElementById('form-steps-progress').style.opacity = '1';
+                document.getElementById('step-3-content').classList.add('active');
+            }
+        }
+
+        // Display classification outcomes and probabilities
+        function displayAssessmentResults(result, initialInputs = null) {
+            if (initialInputs) {
+                activeAssessmentData = { ...initialInputs };
+                
+                // Populate print metadata
+                const today = new Date();
+                document.getElementById('print-date').innerText = today.toLocaleDateString() + ' ' + today.toLocaleTimeString();
+                document.getElementById('print-name').innerText = activeAssessmentData['PatientName'] || 'N/A';
+                document.getElementById('print-id').innerText = activeAssessmentData['PatientID'] || 'N/A';
+                document.getElementById('print-age').innerText = activeAssessmentData['Age'] + ' Years';
+                document.getElementById('print-gender').innerText = parseInt(activeAssessmentData['Gender']) === 1 ? 'Male' : 'Female';
+                
+                // Populate pathology stamp date
+                const stampDateElem = document.getElementById('print-stamp-date');
+                if (stampDateElem) stampDateElem.innerText = today.toLocaleDateString();
+                
+                // Populate header title
+                const reportTitleElem = document.getElementById('print-report-title');
+                if (reportTitleElem) {
+                    reportTitleElem.innerText = `[${activeAssessmentData['PatientID'] || 'N/A'}] ${activeAssessmentData['PatientName'] || 'N/A'} - Mady PathLabs Lung Cancer Risk Assessment`;
+                }
+                
+                syncSimulatorSliders();
+            }
+            
+            // Render key risk contributions
+            renderRiskExplanations(activeAssessmentData);
+            
+            // Populate printable patient parameter summary
+            populatePrintInputsTable(activeAssessmentData);
+
+            // Hide loading indicator
+            document.getElementById('loading-diagnostics').classList.remove('active');
+            document.getElementById('form-steps-progress').style.display = 'none';
+            document.getElementById('risk-assessment-form').style.display = 'none';
+            
+            // Expand layout to widescreen
+            document.getElementById('app-main').classList.add('widescreen');
+            document.getElementById('assessment-card').classList.add('widescreen');
+            const introHeader = document.getElementById('intro-header');
+            if (introHeader) introHeader.style.display = 'none';
+
+            // Show results container
+            const resultsDiv = document.getElementById('assessment-results');
+            resultsDiv.classList.add('active');
+            
+            // Set prediction level text and classes
+            const badge = document.getElementById('threat-level-badge');
+            badge.innerText = result.prediction;
+            badge.className = 'threat-tag'; // reset
+            
+            let strokeColor = '#10b981'; // Default green
+            
+            if (result.prediction === 'High') {
+                badge.classList.add('threat-high');
+                document.getElementById('threat-summary').innerText = "The model classifies you in the High Threat bracket. Please seek medical consultation immediately.";
+                strokeColor = '#ef4444';
+            } else if (result.prediction === 'Medium') {
+                badge.classList.add('threat-medium');
+                document.getElementById('threat-summary').innerText = "The model classifies you in the Medium Threat bracket. Consider scheduling a routine check-up.";
+                strokeColor = '#f59e0b';
+            } else {
+                badge.classList.add('threat-low');
+                document.getElementById('threat-summary').innerText = "The model classifies you in the Low Threat bracket. Keep up the healthy habits.";
+                strokeColor = '#10b981';
+            }
+            
+            // Update circular gauge values
+            const confidencePct = Math.round(result.confidence * 100);
+            document.getElementById('gauge-probability-value').innerText = `${confidencePct}%`;
+            
+            // Calculate stroke-dashoffset for gauge
+            const circleRadius = 80;
+            const circumference = 2 * Math.PI * circleRadius; // ~502.65
+            const dashoffset = circumference - (result.confidence * circumference);
+            
+            const gaugeFill = document.getElementById('gauge-probability-fill');
+            gaugeFill.style.stroke = strokeColor;
+            gaugeFill.style.strokeDasharray = `${circumference}`;
+            gaugeFill.style.strokeDashoffset = `${dashoffset}`;
+            
+            // Update individual probability lists
+            const classesList = ['Low', 'Medium', 'High'];
+            classesList.forEach(cls => {
+                const prob = result.probabilities[cls] || 0;
+                const probPct = Math.round(prob * 100);
+                
+                document.getElementById(`val-prob-${cls}`).innerText = `${probPct}%`;
+                document.getElementById(`bar-prob-${cls}`).style.width = `${probPct}%`;
+            });
+
+            // Render SHAP force plot
+            if (result.contributions) {
+                activeContributions = result.contributions;
+                if (initialInputs !== null) {
+                    showAllContributions = false;
+                }
+                renderForcePlot();
+            }
+            
+            // Populate recommendations list
+            const recContainer = document.getElementById('recommendations-container');
+            recContainer.innerHTML = '';
+            
+            const listClass = result.prediction === 'High' ? 'high-risk' : (result.prediction === 'Medium' ? 'med-risk' : 'low-risk');
+            
+            result.recommendations.forEach(recText => {
+                const li = document.createElement('li');
+                li.className = `rec-item ${listClass}`;
+                li.innerText = recText;
+                recContainer.appendChild(li);
+            });
+
+            // Calculate sub-scores and render action plan
+            calculateSubScores(activeAssessmentData);
+            renderActionPlan(activeAssessmentData);
+
+            // Check specific action plan items if they were parsed from the PDF
+            if (result.actionPlan) {
+                const cleanStringForMatching = (s) => s.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const actContainer = document.getElementById('action-plan-checklist-container');
+                if (actContainer) {
+                    actContainer.querySelectorAll('.goal-checkbox-wrapper').forEach(wrapper => {
+                        const textNode = wrapper.querySelector('.goal-text');
+                        if (textNode) {
+                            const text = textNode.innerText.trim();
+                            const matched = result.actionPlan.some(parsedGoal => {
+                                return cleanStringForMatching(parsedGoal) === cleanStringForMatching(text);
+                            });
+                            if (matched) {
+                                wrapper.classList.add('checked');
+                            } else {
+                                wrapper.classList.remove('checked');
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Apply risk-level styling classes to gauge-card and stamp-box for print color-coding
+            const gaugeCard = document.querySelector('.gauge-card');
+            if (gaugeCard) {
+                gaugeCard.classList.remove('risk-low', 'risk-medium', 'risk-high');
+                gaugeCard.classList.add(`risk-${result.prediction.toLowerCase()}`);
+            }
+
+            const stampBox = document.querySelector('.stamp-box');
+            if (stampBox) {
+                stampBox.className = 'stamp-box'; // reset to default
+                stampBox.classList.add(`risk-${result.prediction.toLowerCase()}`);
+            }
+        }
+
+        // Render force plot elements with toggle option
+        function renderForcePlot() {
+            const forceContainer = document.getElementById('force-plot-container');
+            if (!forceContainer) return;
+            
+            forceContainer.innerHTML = '';
+            
+            if (activeContributions.length === 0) {
+                forceContainer.innerHTML = `<div class="force-plot-empty">All inputs are at low-risk baseline levels. No directional pull.</div>`;
+                const existingToggle = document.getElementById('force-plot-toggle-btn');
+                if (existingToggle) existingToggle.style.display = 'none';
+                return;
+            }
+            
+            const limit = showAllContributions ? activeContributions.length : 8;
+            const displayList = activeContributions.slice(0, limit);
+            
+            displayList.forEach(contrib => {
+                const row = document.createElement('div');
+                row.className = 'force-bar-row';
+                
+                const isPositive = contrib.contribution > 0;
+                const pctStr = (isPositive ? '+' : '') + Math.round(contrib.contribution * 100) + '%';
+                const barWidth = Math.min(50, Math.abs(contrib.contribution) * 100);
+                
+                const label = FEATURE_DISPLAY_LABELS[contrib.feature] || contrib.feature;
+                
+                row.innerHTML = `
+                    <div class="force-bar-label" title="${label}">${label}</div>
+                    <div class="force-bar-track">
+                        <div class="force-bar-midpoint"></div>
+                        <div class="force-bar-fill ${isPositive ? 'positive' : 'negative'}" style="width: ${barWidth}%;"></div>
+                    </div>
+                    <div class="force-bar-val ${isPositive ? 'positive' : 'negative'}">${pctStr}</div>
+                `;
+                forceContainer.appendChild(row);
+            });
+            
+            let toggleBtn = document.getElementById('force-plot-toggle-btn');
+            if (activeContributions.length > 8) {
+                if (!toggleBtn) {
+                    toggleBtn = document.createElement('button');
+                    toggleBtn.id = 'force-plot-toggle-btn';
+                    toggleBtn.type = 'button';
+                    toggleBtn.className = 'btn-toggle-features';
+                    toggleBtn.onclick = () => {
+                        showAllContributions = !showAllContributions;
+                        renderForcePlot();
+                    };
+                    forceContainer.parentNode.appendChild(toggleBtn);
+                }
+                toggleBtn.style.display = 'block';
+                toggleBtn.innerHTML = showAllContributions 
+                    ? `Show Top Features <i class="fa-solid fa-chevron-up"></i>` 
+                    : `Show All Features (+${activeContributions.length - 8}) <i class="fa-solid fa-chevron-down"></i>`;
+            } else {
+                if (toggleBtn) toggleBtn.style.display = 'none';
+            }
+        }
+
+        // Render explanation items
+        function renderRiskExplanations(data) {
+            const container = document.getElementById('risk-explanations-list');
+            container.innerHTML = '';
+            
+            let warningsFound = 0;
+            
+            // Loop through metadata keys
+            for (const [key, meta] of Object.entries(RISK_EXPLANATION_METADATA)) {
+                const val = parseFloat(data[key] || 1);
+                if (val >= meta.severeThresh) {
+                    warningsFound++;
+                    const isSevere = val >= (meta.severeThresh + 2);
+                    
+                    const item = document.createElement('div');
+                    item.className = 'expl-item';
+                    
+                    item.innerHTML = `
+                        <div class="expl-item-icon ${isSevere ? 'severe' : ''}">
+                            <i class="fa-solid ${meta.icon}"></i>
+                        </div>
+                        <div class="expl-item-content">
+                            <div class="expl-item-title">
+                                <span>${meta.name}</span>
+                                <span class="expl-item-badge ${isSevere ? 'severe' : 'moderate'}">${isSevere ? 'Severe' : 'Moderate'} (${val}/${meta.max})</span>
+                            </div>
+                            <div class="expl-item-desc">${meta.desc}</div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                }
+            }
+            
+            // Special check for Balanced Diet (low is a risk factor)
+            const dietVal = parseFloat(data['Balanced Diet'] || 7);
+            if (dietVal <= 3) {
+                warningsFound++;
+                const item = document.createElement('div');
+                item.className = 'expl-item';
+                item.innerHTML = `
+                    <div class="expl-item-icon">
+                        <i class="fa-solid fa-apple-whole"></i>
+                    </div>
+                    <div class="expl-item-content">
+                        <div class="expl-item-title">
+                            <span>Poor Balanced Diet</span>
+                            <span class="expl-item-badge moderate">Low (${dietVal}/7)</span>
+                        </div>
+                        <div class="expl-item-desc">Lacking a nutrient-rich diet reduces antioxidant intake and natural cell defenses.</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            }
+            
+            if (warningsFound === 0) {
+                container.innerHTML = `
+                    <div class="expl-empty-state">
+                        <i class="fa-solid fa-circle-check" style="color: var(--risk-low); font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                        No high-severity risk factors detected. Great job maintaining healthy indices!
+                    </div>
+                `;
+            }
+        }
+
+        // Sync simulator sliders to the active assessment state
+        function syncSimulatorSliders() {
+            const keys = ['Smoking', 'Balanced Diet', 'Alcohol use', 'Passive Smoker', 'Air Pollution', 'Chest Pain', 'Coughing of Blood', 'Shortness of Breath'];
+            keys.forEach(key => {
+                const slider = document.getElementById(`sim-${key}`);
+                if (slider && activeAssessmentData[key] !== undefined) {
+                    slider.value = activeAssessmentData[key];
+                    slider.nextElementSibling.innerText = activeAssessmentData[key];
+                }
+            });
+        }
+
+        // Handle sliders changing on the simulator
+        function handleSimSliderChange(slider) {
+            const key = slider.id.replace('sim-', '');
+            const val = slider.value;
+            slider.nextElementSibling.innerText = val;
+            
+            // Update active state
+            activeAssessmentData[key] = parseFloat(val);
+
+            // Instantly update sub-scores and action plan goals locally
+            calculateSubScores(activeAssessmentData);
+            renderActionPlan(activeAssessmentData);
+            
+            // Debounce backend request
+            clearTimeout(simDebounceTimer);
+            simDebounceTimer = setTimeout(async () => {
+                const layout = document.querySelector('.result-layout');
+                try {
+                    // Visual feedback: dim Results layout slightly to show update
+                    if (layout) layout.style.opacity = '0.7';
+                    
+                    const response = await fetch(getApiUrl('/predict'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(activeAssessmentData)
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Display results without overwriting activeAssessmentData
+                        displayAssessmentResults(result, null);
+                    }
+                } catch (err) {
+                    console.error("Simulator API update error:", err);
+                } finally {
+                    if (layout) layout.style.opacity = '1';
+                }
+            }, 150);
+        }
+
+        // Helper to update printed clinician notes
+        function updatePrintNotes(value) {
+            const printNotes = document.getElementById('print-notes-display');
+            if (printNotes) {
+                printNotes.innerText = value.trim() ? value : 'No remarks entered.';
+            }
+        }
+
+        // Reset wizard back to Step 1
+        function resetAssessmentForm() {
+            // Reset widescreen layouts and header
+            document.getElementById('app-main').classList.remove('widescreen');
+            document.getElementById('assessment-card').classList.remove('widescreen');
+            const introHeader = document.getElementById('intro-header');
+            if (introHeader) introHeader.style.display = 'block';
+
+            // Reset form fields
+            document.getElementById('risk-assessment-form').reset();
+            
+            // Clear clinician notes screen textarea and print block
+            const notesInput = document.getElementById('clinician-notes-input');
+            if (notesInput) {
+                notesInput.value = '';
+            }
+            updatePrintNotes('');
+            
+            // Reset sliders to default badges
+            const sliders = document.querySelectorAll('.range-slider');
+            sliders.forEach(slider => {
+                updateSliderBadge(slider);
+            });
+            
+            // Reset gender selector to Male
+            selectGender(1);
+            
+            // Hide result container
+            document.getElementById('assessment-results').classList.remove('active');
+            
+            // Display form steps, header and navigation reset
+            document.getElementById('form-steps-progress').style.display = 'flex';
+            document.getElementById('form-steps-progress').style.opacity = '1';
+            document.getElementById('risk-assessment-form').style.display = 'block';
+            
+            // Reset dots
+            document.getElementById('dot-1').className = 'step-dot active';
+            document.getElementById('dot-2').className = 'step-dot';
+            document.getElementById('dot-3').className = 'step-dot';
+            document.getElementById('indicator-line').style.width = '0%';
+            
+            // Show step 1 content
+            document.getElementById('step-1-content').className = 'form-step active';
+            document.getElementById('step-2-content').className = 'form-step';
+            document.getElementById('step-3-content').className = 'form-step';
+            
+            currentStep = 1;
+        }
+
+        const FEATURE_DISPLAY_LABELS = {
+            'Age': 'Age',
+            'Gender': 'Gender',
+            'Air Pollution': 'Air Pollution Exposure',
+            'Alcohol use': 'Alcohol Consumption',
+            'Dust Allergy': 'Dust Allergy Severity',
+            'OccuPational Hazards': 'Occupational Hazards',
+            'Genetic Risk': 'Family Genetic Risk',
+            'chronic Lung Disease': 'Chronic Lung Disease History',
+            'Balanced Diet': 'Balanced Diet Quality',
+            'Obesity': 'Obesity Level',
+            'Smoking': 'Active Smoking',
+            'Passive Smoker': 'Passive Smoking Exposure',
+            'Chest Pain': 'Chest Pain Severity',
+            'Coughing of Blood': 'Coughing of Blood',
+            'Fatigue': 'Fatigue Level',
+            'Weight Loss': 'Weight Loss Severity',
+            'Shortness of Breath': 'Shortness of Breath',
+            'Wheezing': 'Wheezing Frequency',
+            'Swallowing Difficulty': 'Difficulty Swallowing',
+            'Clubbing of Finger Nails': 'Clubbing of Finger Nails',
+            'Frequent Cold': 'Frequent Colds/Infections',
+            'Dry Cough': 'Dry Cough Severity',
+            'Snoring': 'Heavy Snoring'
+        };
+
+        const FEATURE_MAX_VALUES = {
+            'Air Pollution': 8,
+            'Alcohol use': 8,
+            'Dust Allergy': 8,
+            'OccuPational Hazards': 8,
+            'Genetic Risk': 7,
+            'chronic Lung Disease': 7,
+            'Balanced Diet': 7,
+            'Obesity': 7,
+            'Smoking': 8,
+            'Passive Smoker': 8,
+            'Chest Pain': 9,
+            'Coughing of Blood': 9,
+            'Fatigue': 9,
+            'Weight Loss': 8,
+            'Shortness of Breath': 9,
+            'Wheezing': 8,
+            'Swallowing Difficulty': 8,
+            'Clubbing of Finger Nails': 9,
+            'Frequent Cold': 7,
+            'Dry Cough': 7,
+            'Snoring': 7
+        };
+
+        function populatePrintInputsTable(data) {
+            const grid = document.getElementById('print-inputs-grid-content');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            for (const [key, label] of Object.entries(FEATURE_DISPLAY_LABELS)) {
+                let displayVal = '';
+                if (key === 'Age') {
+                    displayVal = `${data[key] || 40} Years`;
+                } else if (key === 'Gender') {
+                    displayVal = parseInt(data[key] || 1) === 1 ? 'Male' : 'Female';
+                } else {
+                    const maxVal = FEATURE_MAX_VALUES[key] || 8;
+                    displayVal = `${data[key] || 1}/${maxVal}`;
+                }
+                
+                const item = document.createElement('div');
+                item.className = 'print-input-item';
+                item.innerHTML = `
+                    <span class="print-input-label">${label}</span>
+                    <span class="print-input-value">${displayVal}</span>
+                `;
+                grid.appendChild(item);
+            }
+        }
+
+        // Initialize slider values on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            // Theme toggle initialization and binding
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            
+            // Set initial theme based on localStorage or system preferences
+            if (currentTheme === 'light' || (!currentTheme && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+                document.body.classList.add('light-theme');
+                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            } else {
+                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            }
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('light-theme');
+                    const isLight = document.body.classList.contains('light-theme');
+                    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                    themeToggleBtn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+                });
+            }
+
+            // PDF dropzone elements
+            const dropzone = document.getElementById('pdf-dropzone');
+            const fileInput = document.getElementById('pdf-file-input');
+            const normalContent = document.getElementById('dropzone-content-normal');
+            const loadingContent = document.getElementById('dropzone-content-loading');
+            const statusAlert = document.getElementById('upload-status-alert');
+
+            if (dropzone && fileInput) {
+                // Click to trigger browser file input select
+                dropzone.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        fileInput.click();
+                    }
+                });
+
+                // Drag over states
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.add('dragover');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('dragover');
+                    }, false);
+                });
+
+                // File dropped
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length > 0) {
+                        handlePdfUpload(files[0]);
+                    }
+                }, false);
+
+                // File selected via dialog
+                fileInput.addEventListener('change', (e) => {
+                    if (fileInput.files.length > 0) {
+                        handlePdfUpload(fileInput.files[0]);
+                    }
+                });
+            }
+
+            // Function to upload file to backend
+            async function handlePdfUpload(file) {
+                if (!file.name.toLowerCase().endsWith('.pdf')) {
+                    showUploadAlert('error', 'Please upload a PDF file only.');
+                    return;
+                }
+
+                // Show loader
+                normalContent.style.display = 'none';
+                loadingContent.style.display = 'flex';
+                statusAlert.style.display = 'none';
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch(getApiUrl('/upload-pdf'), {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const data = result.data;
+                        let fieldsCount = 0;
+
+                        // 1. Patient Name
+                        if (data.PatientName) {
+                            document.getElementById('input-PatientName').value = data.PatientName;
+                            fieldsCount++;
+                        }
+                        // 2. Patient ID
+                        if (data.PatientID) {
+                            document.getElementById('input-PatientID').value = data.PatientID;
+                            fieldsCount++;
+                        }
+                        // 3. Age
+                        if (data.Age !== undefined) {
+                            document.getElementById('input-Age').value = data.Age;
+                            fieldsCount++;
+                        }
+                        // 4. Gender
+                        if (data.Gender !== undefined) {
+                            selectGender(parseInt(data.Gender));
+                            fieldsCount++;
+                        }
+
+                        // 5. 21 Sliders
+                        const slidersList = document.querySelectorAll('#risk-assessment-form .range-slider');
+                        slidersList.forEach(slider => {
+                            const name = slider.name;
+                            if (data[name] !== undefined) {
+                                slider.value = data[name];
+                                updateSliderBadge(slider);
+                                fieldsCount++;
+                            }
+                        });
+
+                        // If a complete processed report is uploaded, bypass form entry and restore results directly
+                        if (data.ThreatLevel) {
+                            // Populate clinician notes input
+                            if (data.ClinicianRemarks) {
+                                const notesInput = document.getElementById('clinician-notes-input');
+                                if (notesInput) {
+                                    notesInput.value = data.ClinicianRemarks;
+                                }
+                                updatePrintNotes(data.ClinicianRemarks);
+                            }
+
+                            // Construct synthetic result
+                            const syntheticResult = {
+                                success: true,
+                                prediction: data.ThreatLevel,
+                                confidence: data.Confidence !== undefined ? data.Confidence : 0.5,
+                                probabilities: {
+                                    Low: data.Probability_Low !== undefined ? data.Probability_Low : 0,
+                                    Medium: data.Probability_Medium !== undefined ? data.Probability_Medium : 0,
+                                    High: data.Probability_High !== undefined ? data.Probability_High : 0
+                                },
+                                recommendations: data.Recommendations || [],
+                                actionPlan: data.ActionPlan || [],
+                                contributions: (data.RiskContributions || []).map((feat, index) => {
+                                    let contribVal = 0.15;
+                                    if (feat === 'Coughing of Blood') {
+                                        contribVal = 0.28;
+                                    } else if (feat === 'Clubbing of Finger Nails') {
+                                        contribVal = 0.12;
+                                    } else {
+                                        contribVal = Math.max(0.05, 0.20 - (index * 0.04));
+                                    }
+                                    return {
+                                        feature: feat,
+                                        value: data[feat] !== undefined ? data[feat] : 4.0,
+                                        baseline: feat === 'Balanced Diet' ? 7.0 : 1.0,
+                                        contribution: contribVal
+                                    };
+                                })
+                            };
+
+                            // Build active assessment data structure
+                            const initialInputs = {
+                                PatientName: data.PatientName || '',
+                                PatientID: data.PatientID || '',
+                                Age: data.Age || 40,
+                                Gender: data.Gender || 1
+                            };
+                            slidersList.forEach(slider => {
+                                initialInputs[slider.name] = data[slider.name] !== undefined ? data[slider.name] : slider.value;
+                            });
+
+                            // Display results directly (bypassing input forms wizard)
+                            displayAssessmentResults(syntheticResult, initialInputs);
+
+                            showUploadAlert('success', `Complete report loaded! Patient details, recommendations, action plan, and clinician remarks restored.`);
+                        } else {
+                            showUploadAlert('success', `Auto-fill complete! Successfully loaded ${fieldsCount} patient parameters.`);
+                        }
+                    } else {
+                        throw new Error(result.error || 'Failed to parse the PDF report.');
+                    }
+                } catch (err) {
+                    showUploadAlert('error', err.message);
+                } finally {
+                    normalContent.style.display = 'flex';
+                    loadingContent.style.display = 'none';
+                }
+            }
+
+            function showUploadAlert(type, message) {
+                if (!statusAlert) return;
+                statusAlert.style.display = 'flex';
+                statusAlert.className = `upload-status-alert ${type}`;
+                
+                const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+                statusAlert.querySelector('.alert-icon').innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                statusAlert.querySelector('.alert-text').innerText = message;
+
+                // Auto hide after 6 seconds
+                clearTimeout(window.uploadAlertTimer);
+                window.uploadAlertTimer = setTimeout(() => {
+                    statusAlert.style.display = 'none';
+                }, 6000);
+            }
+
+            const sliders = document.querySelectorAll('.range-slider');
+            sliders.forEach(slider => {
+                updateSliderBadge(slider);
+            });
+
+            // Delegate patient action plan checkbox clicks
+            const container = document.getElementById('action-plan-checklist-container');
+            if (container) {
+                container.addEventListener('click', (event) => {
+                    const wrapper = event.target.closest('.goal-checkbox-wrapper');
+                    if (wrapper) {
+                        wrapper.classList.toggle('checked');
+                    }
+                });
+            }
+
+            // Intercept Enter key globally to navigate steps instead of premature submit
+            document.addEventListener('keydown', function(event) {
+                const form = document.getElementById('risk-assessment-form');
+                const loading = document.getElementById('loading-diagnostics');
+                
+                // Do not intercept if form is hidden or if loading analysis is active
+                if (form.style.display === 'none' || loading.classList.contains('active')) {
+                    return;
+                }
+                
+                if (event.key === 'Enter') {
+                    // Prevent default browser form submission
+                    event.preventDefault();
+                    
+                    if (currentStep === 1) {
+                        navigateStep(1, 2);
+                    } else if (currentStep === 2) {
+                        navigateStep(2, 3);
+                    } else if (currentStep === 3) {
+                        handleFormSubmit(event);
+                    }
+                }
+            });
+
+            // Dynamic document title update during printing to customize the saved PDF filename
+            window.addEventListener('beforeprint', () => {
+                window._originalTitle = document.title;
+                const nameInput = document.getElementById('input-PatientName');
+                const idInput = document.getElementById('input-PatientID');
+                
+                const patientName = nameInput ? nameInput.value.trim() : '';
+                const patientID = idInput ? idInput.value.trim() : '';
+                
+                if (patientName || patientID) {
+                    const namePart = patientName || 'Unknown Patient';
+                    const idPart = patientID || 'No ID';
+                    document.title = `[${idPart}] ${namePart} - Mady PathLabs Lung Cancer Risk Assessment`;
+                }
+            });
+
+            window.addEventListener('afterprint', () => {
+                if (window._originalTitle) {
+                    document.title = window._originalTitle;
+                }
+            });
+        });
+    </script>
+    
+
+</body>
+</html>

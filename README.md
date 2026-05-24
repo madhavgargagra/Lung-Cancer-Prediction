@@ -81,5 +81,33 @@ python Comparison.py            # compare all models
 ## Dependencies
 
 ```
-pandas  numpy  scikit-learn  xgboost  seaborn  matplotlib
+pandas  numpy  scikit-learn  xgboost  seaborn  matplotlib  flask  pypdf
 ```
+
+---
+
+## 🌐 Web Application (Mady PathLabs Lung Cancer Assessment)
+
+An interactive, user-friendly diagnostic web portal built with **Flask** and styled with a premium **glassmorphic design system** (supporting both light and dark modes).
+
+### Key Features:
+- 📊 **Model Predictions & Explanations**: Uses the trained XGBoost model to classify patient risk and displays a **SHAP-style decision force plot** (Model Decision Pull) showing features pushing risk higher (red) or lower (green).
+- 📂 **Pathology PDF Report Restoration**: Direct drag-and-drop upload for Mady PathLabs PDF reports, extracting demographics, the 21 patient symptoms/sliders, threat levels, key risk factors, and clinician notes to immediately restore the full results screen.
+- 🎛️ **Interactive "What-If" Simulator**: Patients and clinicians can adjust symptoms and exposures in real-time to see how threat probabilities change.
+- 🖨️ **Clinic-Ready Printing**: Includes a custom `@media print` style sheet to output clean, grayscale, paper-saving clinical PDF reports complete with pathology stamps and signature lines.
+
+### How to Run the Web App:
+
+1. Navigate to the folder:
+   ```bash
+   cd github
+   ```
+2. Start the Flask server:
+   ```bash
+   python app.py
+   ```
+3. Open your browser and go to:
+   ```
+   http://127.0.0.1:5000/
+   ```
+
